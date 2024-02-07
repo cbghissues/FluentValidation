@@ -57,6 +57,7 @@ internal static class PropertyPathHelper
                     var itemIndex = 0;
                     foreach (var item in enumerable)
                     {
+                        if (CheckIfTypeIsIgnorable(item)) continue;
                         nodes.Enqueue(new Node()
                         {
                             ModelObject = item,
@@ -68,17 +69,25 @@ internal static class PropertyPathHelper
                 }
                 else if(instance is not null)
                 {
-                    nodes.Enqueue(new Node()
-                    {
-                        ModelObject = instance,
-                        Parent = currentNode,
-                        PropertyName = nonPrimitiveProperty.Name
-                    });
+                    if (!CheckIfTypeIsIgnorable(instance)) {
+                        nodes.Enqueue(new Node()
+                        {
+                            ModelObject = instance,
+                            Parent = currentNode,
+                            PropertyName = nonPrimitiveProperty.Name
+                        });
+                    }
                 }
             }
         }
 
         return string.Empty;
+    }
+
+    private static Boolean CheckIfTypeIsIgnorable(Object @object) {
+        var type = @object.GetType();
+        if (type.FullName?.StartsWith("Google.Protobuf") ?? default) return true;
+        return default;
     }
     
     private static string BuildPropertyPath(Node currentNode, FieldIdentifier fieldIdentifier)
